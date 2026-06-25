@@ -9,10 +9,13 @@ import json
 import os
 import re
 from pathlib import Path
+
+import streamlit as st
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
+# Load .env for local development
 load_dotenv(Path(__file__).parent.parent / ".env")
 
 # ── Prompt ────────────────────────────────────────────────────────────────────
@@ -90,26 +93,30 @@ def _repair_json(raw: str) -> dict:
     except json.JSONDecodeError:
         pass
 
-    # 2. Strip code fences  (```json … ```)
+    # 2. Strip code fences
     stripped = re.sub(r"^```(?:json)?\s*", "", text, flags=re.MULTILINE)
     stripped = re.sub(r"\s*```\s*$", "", stripped, flags=re.MULTILINE).strip()
+
     try:
         return json.loads(stripped)
     except json.JSONDecodeError:
         pass
 
-    # 3. Extract first { … last }
+    # 3. Extract first JSON object
     start = text.find("{")
-    end   = text.rfind("}")
+    end = text.rfind("}")
+
     if start != -1 and end > start:
-        candidate = text[start : end + 1]
+        candidate = text[start:end + 1]
+
         try:
             return json.loads(candidate)
         except json.JSONDecodeError:
             pass
 
-        # 4. Fix trailing commas + repair bare strings
+        # 4. Remove trailing commas
         fixed = re.sub(r",(\s*[}\]])", r"\1", candidate)
+
         try:
             return json.loads(fixed)
         except json.JSONDecodeError:
@@ -124,50 +131,57 @@ def _repair_json(raw: str) -> dict:
 # ── Validation ────────────────────────────────────────────────────────────────
 
 def _validate(data: dict) -> dict:
-    """Ensure correct types; fill missing keys with safe defaults."""
 
-    def _list_of_str(val) -> list:
+    def _list_of_str(val):
         if isinstance(val, list):
             return [str(i) for i in val]
         return []
 
-    def _list_of_dict(val) -> list:
+    def _list_of_dict(val):
         if isinstance(val, list):
             return [i for i in val if isinstance(i, dict)]
         return []
 
-    # summary
+    # Summary
     raw_s = data.get("summary", {})
+
     if not isinstance(raw_s, dict):
         raw_s = {"short_summary": str(raw_s)}
+
     data["summary"] = {
         "short_summary": str(raw_s.get("short_summary", "")),
         "bullet_points": _list_of_str(raw_s.get("bullet_points")),
         "key_takeaways": _list_of_str(raw_s.get("key_takeaways")),
     }
 
-    # explanation
+    # Explanation
     raw_e = data.get("explanation", {})
+
     if not isinstance(raw_e, dict):
         raw_e = {"simple_explanation": str(raw_e)}
+
     data["explanation"] = {
         "simple_explanation": str(raw_e.get("simple_explanation", "")),
         "important_concepts": _list_of_dict(raw_e.get("important_concepts")),
         "real_life_examples": _list_of_str(raw_e.get("real_life_examples")),
-        "exam_tips":          _list_of_str(raw_e.get("exam_tips")),
+        "exam_tips": _list_of_str(raw_e.get("exam_tips")),
     }
 
-    # quiz
+    # Quiz
     raw_q = data.get("quiz", [])
+
     data["quiz"] = [
-        q for q in _list_of_dict(raw_q)
+        q
+        for q in _list_of_dict(raw_q)
         if "question" in q and "options" in q and "answer" in q
     ]
 
-    # flashcards
+    # Flashcards
     raw_f = data.get("flashcards", [])
+
     data["flashcards"] = [
-        f for f in _list_of_dict(raw_f)
+        f
+        for f in _list_of_dict(raw_f)
         if "front" in f and "back" in f
     ]
 
@@ -179,20 +193,26 @@ def _validate(data: dict) -> dict:
 def generate_study_pack(text: str, model: str = "gemini-2.5-flash") -> dict:
     """
     Single Gemini call.
-    Returns validated dict: {summary, explanation, quiz, flashcards}.
-    Raises ValueError on bad API key or unrecoverable JSON.
+    Returns validated dict.
     """
-    api_key = os.getenv("GEMINI_API_KEY", "").strip()
+
+    # First try Streamlit Cloud Secrets.
+    # If unavailable, fall back to local .env.
+    api_key = (
+        st.secrets.get("GEMINI_API_KEY")
+        or os.getenv("GEMINI_API_KEY", "")
+    ).strip()
+
     if not api_key:
         raise ValueError(
-            "GEMINI_API_KEY not set.\n"
-            "Add it to your .env file:\n"
-            "  GEMINI_API_KEY=your_key_here\n"
-            "Get a free key at: https://aistudio.google.com/apikey"
+            "GEMINI_API_KEY not found.\n"
+            "Local: put it in .env\n"
+            "Streamlit Cloud: add it under App → Advanced Settings → Secrets"
         )
 
-    client   = genai.Client(api_key=api_key)
-    prompt   = _PROMPT.format(text=text)
+    client = genai.Client(api_key=api_key)
+
+    prompt = _PROMPT.format(text=text)
 
     try:
         response = client.models.generate_content(
@@ -205,6 +225,8 @@ def generate_study_pack(text: str, model: str = "gemini-2.5-flash") -> dict:
     except Exception as e:
         raise ValueError(f"Gemini API call failed: {e}") from e
 
-    raw  = response.text or ""
+    raw = response.text or ""
+
     data = _repair_json(raw)
+
     return _validate(data)
