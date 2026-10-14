@@ -1,8 +1,7 @@
-"""
-Gemini AI integration — ONE call per document, structured JSON output.
 
-Returns a validated dict with keys: summary, explanation, quiz, flashcards.
-Includes multi-strategy JSON repair for malformed responses.
+"""
+Gemini AI integration — one API call per document.
+Returns validated JSON containing summary, explanation, quiz, and flashcards.
 """
 
 import json
@@ -15,107 +14,128 @@ from dotenv import load_dotenv
 from google import genai
 from google.genai import types
 
-# Load .env for local development
+
 load_dotenv(Path(__file__).parent.parent / ".env")
 
-# ── Prompt ────────────────────────────────────────────────────────────────────
 
-_PROMPT = """You are an expert educator. Analyse the following study material thoroughly and produce a complete study pack.
+_PROMPT = """
+You are an expert educator. Analyze the study material thoroughly.
 
-Return ONLY valid JSON — no markdown, no code fences, no preamble, no trailing text.
-Use this EXACT schema (every key is required):
+Return ONLY valid JSON. Do not include Markdown fences or extra text.
+
+Use this exact schema:
 
 {{
   "summary": {{
-    "short_summary": "<concise 2-3 sentence overview of the entire material>",
-    "bullet_points": [
-      "<key point 1>",
-      "<key point 2>"
-    ],
-    "key_takeaways": [
-      "<most important takeaway 1>",
-      "<most important takeaway 2>"
-    ]
+    "short_summary": "A concise 2-3 sentence overview",
+    "bullet_points": ["Key point 1", "Key point 2"],
+    "key_takeaways": ["Takeaway 1", "Takeaway 2"]
   }},
   "explanation": {{
-    "simple_explanation": "<plain-language explanation for a student — multiple paragraphs separated by \\n\\n>",
+    "simple_explanation": "A clear, student-friendly explanation",
     "important_concepts": [
-      {{"concept": "<term>", "definition": "<clear definition>"}}
+      {{"concept": "Term", "definition": "Clear definition"}}
     ],
-    "real_life_examples": [
-      "<specific real-world example 1>",
-      "<specific real-world example 2>"
-    ],
-    "exam_tips": [
-      "<actionable study or exam tip 1>",
-      "<actionable study or exam tip 2>"
-    ]
+    "real_life_examples": ["Example 1", "Example 2"],
+    "exam_tips": ["Tip 1", "Tip 2"]
   }},
   "quiz": [
     {{
-      "question": "<question text>",
-      "options": ["A) <option>", "B) <option>", "C) <option>", "D) <option>"],
-      "answer": "<exact matching option string, e.g. A) option text>",
-      "explanation": "<why this answer is correct>"
+      "question": "Question text",
+      "options": [
+        "A) Option one",
+        "B) Option two",
+        "C) Option three",
+        "D) Option four"
+      ],
+      "answer": "A) Option one",
+      "explanation": "Why the answer is correct"
     }}
   ],
   "flashcards": [
     {{
-      "front": "<term or concept>",
-      "back": "<clear definition or explanation>"
+      "front": "Term or concept",
+      "back": "Definition or explanation"
     }}
   ]
 }}
 
-Minimum requirements (exceed these when content allows):
-- summary.bullet_points: 8+ items
-- summary.key_takeaways: 5+ items
-- explanation.important_concepts: 8+ items
-- explanation.real_life_examples: 4+ items
-- explanation.exam_tips: 5+ items
-- quiz: 10+ questions, each with exactly 4 A/B/C/D options
-- flashcards: 15+ cards
+Requirements:
+- Summary: at least 8 bullet points and 5 key takeaways.
+- Explanation: at least 8 important concepts, 4 real-life examples,
+  and 5 exam tips.
+- Quiz: at least 10 questions, each with exactly 4 options.
+- The quiz answer must exactly match one of its options.
+- Flashcards: at least 15 cards.
+- Base all content on the supplied study material.
+- Do not invent facts that the material does not support.
+- If the material is too short to meet a requirement, provide the
+  best possible result without inventing information.
 
---- STUDY MATERIAL ---
+STUDY MATERIAL:
 {text}
 """
 
 
-# ── JSON repair ───────────────────────────────────────────────────────────────
+def _get_api_key() -> str:
+    """Read the key from Streamlit secrets or the local environment."""
+
+    api_key = ""
+
+    try:
+        api_key = st.secrets.get("GEMINI_API_KEY", "")
+    except Exception:
+        # Local secrets.toml may not exist yet.
+        pass
+
+    if not api_key:
+        api_key = os.getenv("GEMINI_API_KEY", "")
+
+    return api_key.strip()
+
 
 def _repair_json(raw: str) -> dict:
-    """Try multiple strategies to extract valid JSON from Gemini output."""
-    text = raw.strip()
+    """Parse Gemini JSON and repair common formatting issues."""
 
-    # 1. Direct parse
+    text = (raw or "").strip()
+
+    if not text:
+        raise ValueError("Gemini returned an empty response.")
+
+    # Try parsing the response directly.
     try:
         return json.loads(text)
     except json.JSONDecodeError:
         pass
 
-    # 2. Strip code fences
-    stripped = re.sub(r"^```(?:json)?\s*", "", text, flags=re.MULTILINE)
-    stripped = re.sub(r"\s*```\s*$", "", stripped, flags=re.MULTILINE).strip()
+    # Remove Markdown code fences.
+    stripped = re.sub(
+        r"^\s*```(?:json)?\s*",
+        "",
+        text,
+        flags=re.IGNORECASE,
+    )
+    stripped = re.sub(r"\s*```\s*$", "", stripped).strip()
 
     try:
         return json.loads(stripped)
     except json.JSONDecodeError:
         pass
 
-    # 3. Extract first JSON object
-    start = text.find("{")
-    end = text.rfind("}")
+    # Extract the first JSON object.
+    start = stripped.find("{")
+    end = stripped.rfind("}")
 
     if start != -1 and end > start:
-        candidate = text[start:end + 1]
+        candidate = stripped[start:end + 1]
 
         try:
             return json.loads(candidate)
         except json.JSONDecodeError:
             pass
 
-        # 4. Remove trailing commas
-        fixed = re.sub(r",(\s*[}\]])", r"\1", candidate)
+        # Remove trailing commas before closing braces or brackets.
+        fixed = re.sub(r",\s*([}\]])", r"\1", candidate)
 
         try:
             return json.loads(fixed)
@@ -123,95 +143,118 @@ def _repair_json(raw: str) -> dict:
             pass
 
     raise ValueError(
-        f"Gemini returned JSON that could not be repaired.\n"
-        f"First 500 chars of raw response:\n{raw[:500]}"
+        "Gemini returned a response that could not be parsed as JSON. "
+        "Try a shorter document or review the response format."
     )
 
 
-# ── Validation ────────────────────────────────────────────────────────────────
+def _list_of_str(value) -> list:
+    if not isinstance(value, list):
+        return []
+
+    return [
+        item if isinstance(item, str) else str(item)
+        for item in value
+        if item is not None
+    ]
+
+
+def _list_of_dict(value) -> list:
+    if not isinstance(value, list):
+        return []
+
+    return [item for item in value if isinstance(item, dict)]
+
 
 def _validate(data: dict) -> dict:
+    """Normalize the generated study pack for the application."""
 
-    def _list_of_str(val):
-        if isinstance(val, list):
-            return [str(i) for i in val]
-        return []
+    if not isinstance(data, dict):
+        raise ValueError("Gemini returned an invalid study-pack structure.")
 
-    def _list_of_dict(val):
-        if isinstance(val, list):
-            return [i for i in val if isinstance(i, dict)]
-        return []
+    raw_summary = data.get("summary", {})
+    if not isinstance(raw_summary, dict):
+        raw_summary = {"short_summary": str(raw_summary)}
 
-    # Summary
-    raw_s = data.get("summary", {})
+    raw_explanation = data.get("explanation", {})
+    if not isinstance(raw_explanation, dict):
+        raw_explanation = {"simple_explanation": str(raw_explanation)}
 
-    if not isinstance(raw_s, dict):
-        raw_s = {"short_summary": str(raw_s)}
+    quiz = []
 
-    data["summary"] = {
-        "short_summary": str(raw_s.get("short_summary", "")),
-        "bullet_points": _list_of_str(raw_s.get("bullet_points")),
-        "key_takeaways": _list_of_str(raw_s.get("key_takeaways")),
-    }
+    for question in _list_of_dict(data.get("quiz")):
+        options = _list_of_str(question.get("options"))
 
-    # Explanation
-    raw_e = data.get("explanation", {})
+        if (
+            question.get("question")
+            and len(options) == 4
+            and question.get("answer") in options
+        ):
+            quiz.append({
+                "question": str(question["question"]),
+                "options": options,
+                "answer": str(question["answer"]),
+                "explanation": str(question.get("explanation", "")),
+            })
 
-    if not isinstance(raw_e, dict):
-        raw_e = {"simple_explanation": str(raw_e)}
-
-    data["explanation"] = {
-        "simple_explanation": str(raw_e.get("simple_explanation", "")),
-        "important_concepts": _list_of_dict(raw_e.get("important_concepts")),
-        "real_life_examples": _list_of_str(raw_e.get("real_life_examples")),
-        "exam_tips": _list_of_str(raw_e.get("exam_tips")),
-    }
-
-    # Quiz
-    raw_q = data.get("quiz", [])
-
-    data["quiz"] = [
-        q
-        for q in _list_of_dict(raw_q)
-        if "question" in q and "options" in q and "answer" in q
+    flashcards = [
+        {
+            "front": str(card["front"]),
+            "back": str(card["back"]),
+        }
+        for card in _list_of_dict(data.get("flashcards"))
+        if card.get("front") and card.get("back")
     ]
 
-    # Flashcards
-    raw_f = data.get("flashcards", [])
+    return {
+        "summary": {
+            "short_summary": str(
+                raw_summary.get("short_summary", "")
+            ),
+            "bullet_points": _list_of_str(
+                raw_summary.get("bullet_points")
+            ),
+            "key_takeaways": _list_of_str(
+                raw_summary.get("key_takeaways")
+            ),
+        },
+        "explanation": {
+            "simple_explanation": str(
+                raw_explanation.get("simple_explanation", "")
+            ),
+            "important_concepts": _list_of_dict(
+                raw_explanation.get("important_concepts")
+            ),
+            "real_life_examples": _list_of_str(
+                raw_explanation.get("real_life_examples")
+            ),
+            "exam_tips": _list_of_str(
+                raw_explanation.get("exam_tips")
+            ),
+        },
+        "quiz": quiz,
+        "flashcards": flashcards,
+    }
 
-    data["flashcards"] = [
-        f
-        for f in _list_of_dict(raw_f)
-        if "front" in f and "back" in f
-    ]
 
-    return data
+def generate_study_pack(
+    text: str,
+    model: str = "gemini-2.5-flash",
+) -> dict:
+    """Generate a complete study pack with one Gemini API request."""
 
+    if not text or not text.strip():
+        raise ValueError("No text was extracted from the uploaded document.")
 
-# ── Public API ────────────────────────────────────────────────────────────────
-
-def generate_study_pack(text: str, model: str = "gemini-2.5-flash") -> dict:
-    """
-    Single Gemini call.
-    Returns validated dict.
-    """
-
-    # First try Streamlit Cloud Secrets.
-    # If unavailable, fall back to local .env.
-    api_key = (
-        st.secrets.get("GEMINI_API_KEY")
-        or os.getenv("GEMINI_API_KEY", "")
-    ).strip()
+    api_key = _get_api_key()
 
     if not api_key:
         raise ValueError(
-            "GEMINI_API_KEY not found.\n"
-            "Local: put it in .env\n"
-            "Streamlit Cloud: add it under App → Advanced Settings → Secrets"
+            "GEMINI_API_KEY is not configured. "
+            "Add it to .streamlit/secrets.toml before generating a study pack."
         )
 
     client = genai.Client(api_key=api_key)
-
     prompt = _PROMPT.format(text=text)
 
     try:
@@ -222,11 +265,15 @@ def generate_study_pack(text: str, model: str = "gemini-2.5-flash") -> dict:
                 response_mime_type="application/json",
             ),
         )
-    except Exception as e:
-        raise ValueError(f"Gemini API call failed: {e}") from e
+    except Exception as exc:
+        raise ValueError(f"Gemini API request failed: {exc}") from exc
 
-    raw = response.text or ""
-
-    data = _repair_json(raw)
-
-    return _validate(data)
+    try:
+        data = _repair_json(response.text or "")
+        return _validate(data)
+    except ValueError:
+        raise
+    except Exception as exc:
+        raise ValueError(
+            f"Could not process the generated study pack: {exc}"
+        ) from exc

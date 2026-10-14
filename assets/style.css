@@ -31,17 +31,63 @@ body,
 }
 
 #MainMenu,
-footer,
-header {
+footer {
   visibility: hidden !important;
   height: 0 !important;
 }
 
+/* Remove Streamlit header and blank strip above the app */
+header,
+[data-testid="stHeader"] {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  max-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+[data-testid="stAppViewContainer"] {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* Hide unwanted Streamlit controls */
 [data-testid="stDecoration"],
 [data-testid="stSidebarNav"],
-[data-testid="stToolbar"],
-[data-testid="collapsedControl"] {
+[data-testid="stToolbar"] {
   display: none !important;
+}
+
+/* Sidebar reopen button */
+[data-testid="collapsedControl"] {
+  display: flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: fixed !important;
+  top: 8px !important;
+  left: 8px !important;
+  z-index: 999999 !important;
+  width: 40px !important;
+  height: 40px !important;
+  pointer-events: auto !important;
+}
+
+[data-testid="collapsedControl"] button {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 36px !important;
+  height: 36px !important;
+  padding: 0 !important;
+  border-radius: 10px !important;
+  background: #FFFFFF !important;
+  border: 1px solid rgba(15, 45, 82, 0.12) !important;
+  color: #0F2D52 !important;
+  box-shadow: 0 4px 12px rgba(15, 45, 82, 0.12) !important;
 }
 
 ::-webkit-scrollbar {
@@ -61,6 +107,10 @@ header {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(15, 45, 82, 0.34);
 }
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
 
 [data-testid="stSidebar"] {
   background: var(--navy) !important;
@@ -122,7 +172,10 @@ header {
   text-decoration: none !important;
   font-size: 13.5px !important;
   font-weight: 500 !important;
-  transition: background-color 0.18s ease, transform 0.18s ease, color 0.18s ease !important;
+  transition:
+    background-color 0.18s ease,
+    transform 0.18s ease,
+    color 0.18s ease !important;
 }
 
 [data-testid="stSidebar"] [data-testid="stPageLink"] a:hover {
@@ -182,6 +235,10 @@ header {
   color: rgba(255, 255, 255, 0.68);
   line-height: 1.6;
 }
+
+/* ============================================================
+   MAIN CONTENT
+   ============================================================ */
 
 .main .block-container {
   max-width: 1140px !important;
@@ -269,6 +326,10 @@ hr {
   border-bottom: 1px solid rgba(15, 45, 82, 0.08);
 }
 
+/* ============================================================
+   CARDS
+   ============================================================ */
+
 .hero-card,
 .stat-card,
 .content-block,
@@ -297,7 +358,12 @@ section[data-testid="stFileUploaderDropzone"] {
   overflow: hidden;
   margin-bottom: 22px;
   padding: 28px 30px;
-  background: linear-gradient(135deg, #FFFFFF 0%, #FFFDF7 72%, rgba(214, 179, 106, 0.14) 100%) !important;
+  background: linear-gradient(
+    135deg,
+    #FFFFFF 0%,
+    #FFFDF7 72%,
+    rgba(214, 179, 106, 0.14) 100%
+  ) !important;
 }
 
 .hero-card::before {
@@ -307,7 +373,11 @@ section[data-testid="stFileUploaderDropzone"] {
   right: -32px;
   width: 180px;
   height: 180px;
-  background: radial-gradient(circle, rgba(214, 179, 106, 0.28) 0%, rgba(214, 179, 106, 0) 72%);
+  background: radial-gradient(
+    circle,
+    rgba(214, 179, 106, 0.28) 0%,
+    rgba(214, 179, 106, 0) 72%
+  );
   pointer-events: none;
 }
 
@@ -318,7 +388,11 @@ section[data-testid="stFileUploaderDropzone"] {
   bottom: -34px;
   width: 180px;
   height: 120px;
-  background: radial-gradient(circle, rgba(15, 45, 82, 0.1) 0%, rgba(15, 45, 82, 0) 70%);
+  background: radial-gradient(
+    circle,
+    rgba(15, 45, 82, 0.1) 0%,
+    rgba(15, 45, 82, 0) 70%
+  );
   pointer-events: none;
 }
 
@@ -342,6 +416,10 @@ section[data-testid="stFileUploaderDropzone"] {
   color: var(--text-secondary);
   line-height: 1.7;
 }
+
+/* ============================================================
+   FILE PREVIEW / STATUS
+   ============================================================ */
 
 .file-preview,
 .continue-card,
@@ -401,7 +479,11 @@ section[data-testid="stFileUploaderDropzone"] {
 .status-banner {
   margin-top: 14px;
   text-align: center;
-  background: linear-gradient(135deg, #FFFFFF 0%, #FFFDF7 100%) !important;
+  background: linear-gradient(
+    135deg,
+    #FFFFFF 0%,
+    #FFFDF7 100%
+  ) !important;
 }
 
 .status-banner.success {
@@ -425,11 +507,18 @@ section[data-testid="stFileUploaderDropzone"] {
   color: var(--text-secondary);
 }
 
+/* ============================================================
+   STAT CARDS
+   ============================================================ */
+
 .stat-card {
   min-height: 126px;
   padding: 22px 18px;
   text-align: center;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
 }
 
 .stat-card:hover,
@@ -464,6 +553,10 @@ section[data-testid="stFileUploaderDropzone"] {
   text-transform: uppercase;
   color: var(--text-secondary);
 }
+
+/* ============================================================
+   META / CONTENT
+   ============================================================ */
 
 .meta-pill-label,
 .question-number,
@@ -558,6 +651,10 @@ section[data-testid="stFileUploaderDropzone"] {
   line-height: 1.7;
 }
 
+/* ============================================================
+   TAKEAWAYS
+   ============================================================ */
+
 .takeaway-list {
   display: flex;
   flex-direction: column;
@@ -588,7 +685,11 @@ section[data-testid="stFileUploaderDropzone"] {
 
 .continue-card {
   margin-top: 10px;
-  background: linear-gradient(135deg, #FFFFFF 0%, #FFFDF7 100%) !important;
+  background: linear-gradient(
+    135deg,
+    #FFFFFF 0%,
+    #FFFDF7 100%
+  ) !important;
 }
 
 .continue-title {
@@ -610,12 +711,20 @@ section[data-testid="stFileUploaderDropzone"] {
   color: var(--navy);
 }
 
+/* ============================================================
+   HISTORY DOCUMENT ROW
+   ============================================================ */
+
 .doc-row {
   display: flex;
   align-items: center;
   gap: 14px;
   padding: 18px 20px;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
+    background-color 0.18s ease;
 }
 
 .doc-row.is-active {
@@ -666,6 +775,10 @@ section[data-testid="stFileUploaderDropzone"] {
   color: var(--navy);
 }
 
+/* ============================================================
+   CONCEPT / EXAMPLE CARDS
+   ============================================================ */
+
 .concept-card {
   border-left: 4px solid var(--gold) !important;
 }
@@ -709,6 +822,10 @@ section[data-testid="stFileUploaderDropzone"] {
   line-height: 1.7;
 }
 
+/* ============================================================
+   FILE UPLOADER
+   ============================================================ */
+
 [data-testid="stFileUploader"] {
   margin-top: 8px;
 }
@@ -717,7 +834,10 @@ section[data-testid="stFileUploaderDropzone"] {
   padding: 12px !important;
   background: var(--bg-card) !important;
   border: 2px dashed rgba(15, 45, 82, 0.28) !important;
-  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease !important;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease !important;
 }
 
 section[data-testid="stFileUploaderDropzone"]:hover {
@@ -725,7 +845,8 @@ section[data-testid="stFileUploaderDropzone"]:hover {
   background: var(--bg-panel) !important;
 }
 
-section[data-testid="stFileUploaderDropzone"] [data-testid="stFileUploaderDropzoneInstructions"] div,
+section[data-testid="stFileUploaderDropzone"]
+[data-testid="stFileUploaderDropzoneInstructions"] div,
 section[data-testid="stFileUploaderDropzone"] small,
 section[data-testid="stFileUploaderDropzone"] span {
   color: var(--text-secondary) !important;
@@ -739,6 +860,10 @@ section[data-testid="stFileUploaderDropzone"] button {
   font-weight: 600 !important;
 }
 
+/* ============================================================
+   BUTTONS
+   ============================================================ */
+
 .stButton > button,
 .stDownloadButton > button {
   min-height: 44px;
@@ -750,7 +875,10 @@ section[data-testid="stFileUploaderDropzone"] button {
   font-weight: 600 !important;
   padding: 10px 18px !important;
   box-shadow: 0 10px 20px rgba(15, 45, 82, 0.14) !important;
-  transition: background-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease !important;
+  transition:
+    background-color 0.18s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease !important;
 }
 
 .stButton > button:hover,
@@ -771,6 +899,10 @@ section[data-testid="stFileUploaderDropzone"] button {
   color: rgba(255, 255, 255, 0.82) !important;
   box-shadow: none !important;
 }
+
+/* ============================================================
+   INPUTS
+   ============================================================ */
 
 .stTextInput input,
 .stTextArea textarea,
@@ -815,13 +947,20 @@ div[data-baseweb="base-input"] svg,
   color: var(--navy) !important;
 }
 
+/* ============================================================
+   RADIO
+   ============================================================ */
+
 label[data-baseweb="radio"] {
   margin-bottom: 10px;
   padding: 12px 14px;
   border: 1px solid rgba(15, 45, 82, 0.09);
   border-radius: 14px;
   background: var(--bg-card);
-  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease;
 }
 
 label[data-baseweb="radio"] p {
@@ -841,9 +980,14 @@ label[data-baseweb="radio"]:has(input:checked) {
   box-shadow: 0 0 0 2px rgba(15, 45, 82, 0.08);
 }
 
-label[data-baseweb="radio"] [data-testid="stMarkdownContainer"] p {
+label[data-baseweb="radio"]
+[data-testid="stMarkdownContainer"] p {
   color: var(--text-primary) !important;
 }
+
+/* ============================================================
+   EXPANDER / ALERTS
+   ============================================================ */
 
 [data-testid="stExpander"] {
   overflow: hidden;
@@ -879,6 +1023,10 @@ label[data-baseweb="radio"] [data-testid="stMarkdownContainer"] p {
   color: var(--navy) !important;
 }
 
+/* ============================================================
+   INFO TIPS
+   ============================================================ */
+
 .info-tip {
   display: flex;
   align-items: center;
@@ -898,6 +1046,10 @@ label[data-baseweb="radio"] [data-testid="stMarkdownContainer"] p {
 .info-tip.padded {
   padding: 20px 0;
 }
+
+/* ============================================================
+   QUIZ
+   ============================================================ */
 
 .quiz-question-card {
   padding: 22px 24px;
@@ -956,11 +1108,19 @@ label[data-baseweb="radio"] [data-testid="stMarkdownContainer"] p {
   border-left-color: var(--warning);
 }
 
+/* ============================================================
+   SCORE
+   ============================================================ */
+
 .score-banner {
   margin-bottom: 24px;
   padding: 28px 24px;
   text-align: center;
-  background: linear-gradient(135deg, #FFFFFF 0%, #FFFDF7 100%) !important;
+  background: linear-gradient(
+    135deg,
+    #FFFFFF 0%,
+    #FFFDF7 100%
+  ) !important;
 }
 
 .score-banner.tone-high {
@@ -1013,6 +1173,10 @@ label[data-baseweb="radio"] [data-testid="stMarkdownContainer"] p {
   color: var(--text-secondary);
 }
 
+/* ============================================================
+   REVIEW
+   ============================================================ */
+
 .review-list {
   display: flex;
   flex-direction: column;
@@ -1063,6 +1227,10 @@ label[data-baseweb="radio"] [data-testid="stMarkdownContainer"] p {
   font-weight: 700;
 }
 
+/* ============================================================
+   FLASHCARDS
+   ============================================================ */
+
 .flashcard-container {
   max-width: 640px;
   margin: 0 auto;
@@ -1079,7 +1247,9 @@ label[data-baseweb="radio"] [data-testid="stMarkdownContainer"] p {
   align-items: center;
   justify-content: center;
   text-align: center;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .flashcard::before {
@@ -1089,16 +1259,28 @@ label[data-baseweb="radio"] [data-testid="stMarkdownContainer"] p {
   left: -44px;
   width: 170px;
   height: 170px;
-  background: radial-gradient(circle, rgba(214, 179, 106, 0.2) 0%, rgba(214, 179, 106, 0) 70%);
+  background: radial-gradient(
+    circle,
+    rgba(214, 179, 106, 0.2) 0%,
+    rgba(214, 179, 106, 0) 70%
+  );
   pointer-events: none;
 }
 
 .flashcard.is-front {
-  background: linear-gradient(145deg, #FFFFFF 0%, #FFFDF7 100%) !important;
+  background: linear-gradient(
+    145deg,
+    #FFFFFF 0%,
+    #FFFDF7 100%
+  ) !important;
 }
 
 .flashcard.is-back {
-  background: linear-gradient(145deg, #FFFDF7 0%, rgba(214, 179, 106, 0.12) 100%) !important;
+  background: linear-gradient(
+    145deg,
+    #FFFDF7 0%,
+    rgba(214, 179, 106, 0.12) 100%
+  ) !important;
   border-color: rgba(214, 179, 106, 0.26) !important;
 }
 
@@ -1154,6 +1336,10 @@ label[data-baseweb="radio"] [data-testid="stMarkdownContainer"] p {
   line-height: 1.7;
 }
 
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+
 .empty-state {
   padding: 54px 26px;
   text-align: center;
@@ -1194,6 +1380,10 @@ label[data-baseweb="radio"] [data-testid="stMarkdownContainer"] p {
   height: 8px;
 }
 
+/* ============================================================
+   BADGES
+   ============================================================ */
+
 .badge {
   display: inline-block;
   padding: 2px 9px;
@@ -1220,6 +1410,10 @@ label[data-baseweb="radio"] [data-testid="stMarkdownContainer"] p {
   border: 1px solid rgba(15, 45, 82, 0.1);
   color: var(--text-secondary);
 }
+
+/* ============================================================
+   TABLES
+   ============================================================ */
 
 table {
   width: 100%;
@@ -1251,9 +1445,17 @@ tbody tr:nth-child(even) {
   background: rgba(248, 244, 232, 0.6);
 }
 
+/* ============================================================
+   COLUMN SPACING
+   ============================================================ */
+
 [data-testid="stHorizontalBlock"] {
   gap: 14px;
 }
+
+/* ============================================================
+   MOBILE
+   ============================================================ */
 
 @media (max-width: 768px) {
   .main .block-container {
@@ -1282,4 +1484,316 @@ tbody tr:nth-child(even) {
     padding-top: 38px;
     padding-bottom: 38px;
   }
+}
+
+/* ============================================================
+   SIDEBAR NAVIGATION — ORIGINAL COMPACT STYLE
+   ============================================================ */
+
+[data-testid="stSidebar"] {
+  background: #0F2D52 !important;
+}
+
+/* Logo */
+[data-testid="stSidebar"] .sidebar-logo {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 22px 18px 18px !important;
+  margin-bottom: 8px !important;
+}
+
+/* MAIN / RECORDS labels */
+[data-testid="stSidebar"] .nav-section-title {
+  margin: 0 !important;
+  padding: 12px 18px 6px !important;
+  color: rgba(255, 255, 255, 0.62) !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.18em !important;
+  line-height: 1.2 !important;
+  text-transform: uppercase !important;
+}
+
+/* Extra gap before Records */
+[data-testid="stSidebar"] .nav-section-title.with-gap {
+  margin-top: 6px !important;
+}
+
+/* Page-link outer container */
+[data-testid="stSidebar"] [data-testid="stPageLink"] {
+  margin: 2px 10px !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+}
+
+/* Page-link */
+[data-testid="stSidebar"] [data-testid="stPageLink"] a {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+
+  width: 100% !important;
+  min-height: 40px !important;
+  height: 40px !important;
+
+  margin: 0 !important;
+  padding: 10px 12px !important;
+
+  border-radius: 12px !important;
+
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+
+  text-decoration: none !important;
+
+  font-size: 13.5px !important;
+  font-weight: 500 !important;
+
+  transition:
+    background-color 0.18s ease,
+    transform 0.18s ease,
+    color 0.18s ease !important;
+}
+
+/* Page-link text */
+[data-testid="stSidebar"] [data-testid="stPageLink"] a p,
+[data-testid="stSidebar"] [data-testid="stPageLink"] a span {
+  color: inherit !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+}
+
+/* Hover */
+[data-testid="stSidebar"] [data-testid="stPageLink"] a:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #FFFFFF !important;
+  transform: translateX(2px) !important;
+}
+
+/* ============================================================
+   ACTIVE STUDYBUDDY PAGE
+   ============================================================ */
+
+/* Anchor marked as current page */
+[data-testid="stSidebar"]
+[data-testid="stPageLink"]
+a[aria-current="page"] {
+  background: #D6B36A !important;
+  color: #0F2D52 !important;
+  font-weight: 700 !important;
+
+  border-radius: 12px !important;
+
+  box-shadow:
+    0 10px 20px rgba(7, 25, 48, 0.18) !important;
+}
+
+/* All text/icons inside active link */
+[data-testid="stSidebar"]
+[data-testid="stPageLink"]
+a[aria-current="page"] * {
+  color: #0F2D52 !important;
+}
+
+/* Current page container */
+[data-testid="stSidebar"]
+[data-testid="stPageLink"][aria-current="page"] a {
+  background: #D6B36A !important;
+  color: #0F2D52 !important;
+  font-weight: 700 !important;
+}
+
+/* ============================================================
+   SIDEBAR FOOTER
+   ============================================================ */
+
+[data-testid="stSidebar"] .sidebar-footer {
+  margin-top: 14px !important;
+  padding: 16px 18px 12px !important;
+
+  border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+[data-testid="stSidebar"] .sidebar-about {
+  margin: 0 !important;
+  color: rgba(255, 255, 255, 0.68) !important;
+  line-height: 1.6 !important;
+  text-align: center !important;
+}
+
+/* ============================================================
+   ACTIVE DOCUMENT
+   ============================================================ */
+
+[data-testid="stSidebar"] .active-doc-pill {
+  margin: 16px 14px 0 !important;
+  padding: 13px 14px !important;
+
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(214, 179, 106, 0.36) !important;
+  border-radius: 14px !important;
+}
+
+[data-testid="stSidebar"] .active-doc-label {
+  color: rgba(255, 255, 255, 0.72) !important;
+}
+
+[data-testid="stSidebar"] .active-doc-name {
+  color: #FFFFFF !important;
+}
+
+
+/* Fix inactive Study Pack navigation buttons */
+.st-key-nav_pages_3_Summary_py button,
+.st-key-nav_pages_2_Explanation_py button,
+.st-key-nav_pages_4_Quiz_py button,
+.st-key-nav_pages_5_Flashcards_py button {
+    background-color: #ffffff !important;
+    color: #123052 !important;
+    border: 1px solid #e5d4ad !important;
+}
+
+/* Ensure nested button text is visible */
+.st-key-nav_pages_3_Summary_py button *,
+.st-key-nav_pages_2_Explanation_py button *,
+.st-key-nav_pages_4_Quiz_py button *,
+.st-key-nav_pages_5_Flashcards_py button * {
+    color: #123052 !important;
+    opacity: 1 !important;
+    font-weight: 600 !important;
+}
+
+
+/* Global Streamlit button text visibility fix */
+.stApp button {
+    color: #123052 !important;
+}
+
+.stApp button p,
+.stApp button span,
+.stApp button div {
+    color: inherit !important;
+    opacity: 1 !important;
+}
+
+/* Keep primary buttons navy with white text */
+.stApp button[kind="primary"] {
+    background-color: #123052 !important;
+    color: #ffffff !important;
+}
+
+/* Learning Hub navigation buttons */
+.stApp button[kind="secondary"] {
+    background-color: #ffffff !important;
+    color: #123052 !important;
+    border: 1px solid #e5d4ad !important;
+}
+/* ============================================================
+   FIX: BUTTON LABEL VISIBILITY
+   ============================================================ */
+
+/* Default buttons */
+.stApp .stButton > button,
+.stApp .stDownloadButton > button {
+    color: #FFFFFF !important;
+    opacity: 1 !important;
+}
+
+/* Ensure all button text and icons inherit the correct color */
+.stApp .stButton > button p,
+.stApp .stButton > button span,
+.stApp .stButton > button div,
+.stApp .stDownloadButton > button p,
+.stApp .stDownloadButton > button span,
+.stApp .stDownloadButton > button div {
+    color: inherit !important;
+    opacity: 1 !important;
+}
+
+/* Primary buttons: navy background, white text */
+.stApp .stButton > button[kind="primary"] {
+    background-color: #0F2D52 !important;
+    color: #FFFFFF !important;
+}
+
+/* Secondary buttons: white background, navy text */
+.stApp .stButton > button[kind="secondary"] {
+    background-color: #FFFFFF !important;
+    color: #0F2D52 !important;
+    border: 1px solid #E5D4AD !important;
+}
+
+/* Study pack navigation buttons */
+.stApp [class*="st-key-nav_pages_"] button {
+    background-color: #FFFFFF !important;
+    color: #0F2D52 !important;
+    border: 1px solid #E5D4AD !important;
+}
+
+.stApp [class*="st-key-nav_pages_"] button p,
+.stApp [class*="st-key-nav_pages_"] button span,
+.stApp [class*="st-key-nav_pages_"] button div {
+    color: #0F2D52 !important;
+    opacity: 1 !important;
+    font-weight: 600 !important;
+}
+
+/* Quiz radio option text */
+.stApp [data-testid="stRadio"] label,
+.stApp [data-testid="stRadio"] label p,
+.stApp [data-testid="stRadio"] label span,
+.stApp [data-testid="stRadio"] label div[data-testid="stMarkdownContainer"] p {
+    color: #1F2937 !important;
+    opacity: 1 !important;
+}
+/* Fix selected study navigation button */
+.stApp [class*="st-key-nav_pages_"] button[kind="primary"],
+.stApp [class*="st-key-nav_pages_"] button[kind="primary"] p,
+.stApp [class*="st-key-nav_pages_"] button[kind="primary"] span,
+.stApp [class*="st-key-nav_pages_"] button[kind="primary"] div {
+    background-color: #0F2D52 !important;
+    color: #FFFFFF !important;
+    opacity: 1 !important;
+}
+
+/* Keep unselected buttons readable */
+.stApp [class*="st-key-nav_pages_"] button[kind="secondary"],
+.stApp [class*="st-key-nav_pages_"] button[kind="secondary"] p,
+.stApp [class*="st-key-nav_pages_"] button[kind="secondary"] span,
+.stApp [class*="st-key-nav_pages_"] button[kind="secondary"] div {
+    background-color: #FFFFFF !important;
+    color: #0F2D52 !important;
+    opacity: 1 !important;
+}
+/* FINAL FIX: Study Pack navigation button visibility */
+
+/* Selected page button */
+.stApp [class*="st-key-nav_pages_"] button[kind="primary"] {
+    background: #0F2D52 !important;
+    border: 1px solid #0F2D52 !important;
+    color: #FFFFFF !important;
+}
+
+/* Force selected button text and icon to white */
+.stApp [class*="st-key-nav_pages_"] button[kind="primary"] *,
+.stApp [class*="st-key-nav_pages_"] button[kind="primary"] p,
+.stApp [class*="st-key-nav_pages_"] button[kind="primary"] span,
+.stApp [class*="st-key-nav_pages_"] button[kind="primary"] div {
+    color: #FFFFFF !important;
+    -webkit-text-fill-color: #FFFFFF !important;
+    opacity: 1 !important;
+}
+
+/* Unselected buttons */
+.stApp [class*="st-key-nav_pages_"] button[kind="secondary"] {
+    background: #FFFFFF !important;
+    border: 1px solid #E5D4AD !important;
+    color: #0F2D52 !important;
+}
+
+.stApp [class*="st-key-nav_pages_"] button[kind="secondary"] * {
+    color: #0F2D52 !important;
+    -webkit-text-fill-color: #0F2D52 !important;
+    opacity: 1 !important;
 }

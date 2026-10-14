@@ -153,9 +153,15 @@ def _render_flashcards(doc: dict) -> None:
         st.markdown(f'<div class="flashcard-list">{cards_html}</div>', unsafe_allow_html=True)
 
 
+
 doc = st.session_state.get("current_doc")
+
+if st.button("← Back to Learning Hub", key="flashcards_back"):
+    st.switch_page("pages/1_Home.py")
+
 if not doc:
     page_header("🃏  Flashcards")
     no_document_warning()
 else:
     _render_flashcards(doc)
+

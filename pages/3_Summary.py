@@ -160,9 +160,15 @@ def _render_summary(doc: dict) -> None:
     )
 
 
+
 doc = st.session_state.get("current_doc")
+
+if st.button("← Back to Learning Hub", key="summary_back"):
+    st.switch_page("pages/1_Home.py")
+
 if not doc:
     page_header("📝  Summary")
     no_document_warning()
 else:
     _render_summary(doc)
+

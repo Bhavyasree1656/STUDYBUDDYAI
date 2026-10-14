@@ -375,3 +375,83 @@ def get_stats() -> dict:
         "flashcards": fc_count,
         "summaries":  summary_count,
     }
+
+def save_research_analysis(doc_id: str, analysis: dict) -> None:
+    set_setting(
+        f"research_analysis:{doc_id}",
+        json.dumps(analysis, ensure_ascii=False),
+    )
+
+
+def get_research_analysis(doc_id: str) -> dict | None:
+    raw = get_setting(f"research_analysis:{doc_id}")
+
+    if not raw:
+        return None
+
+    try:
+        result = json.loads(raw)
+        return result if isinstance(result, dict) else None
+    except (json.JSONDecodeError, TypeError):
+        return None
+
+
+def save_visual_analysis(filename: str, analysis_type: str, analysis: str) -> str:
+    """Save a visual analysis in the existing settings table."""
+    visual_id = str(uuid.uuid4())
+    now = datetime.now().isoformat()
+
+    record = {
+        "id": visual_id,
+        "filename": filename,
+        "analysis_type": analysis_type,
+        "analysis": analysis,
+        "created_at": now,
+    }
+
+    set_setting(
+        f"visual_analysis:{visual_id}",
+        json.dumps(record, ensure_ascii=False),
+    )
+
+    return visual_id
+
+
+def get_all_visual_analyses() -> list[dict]:
+    """Retrieve saved visual analyses, newest first."""
+    conn = get_connection()
+    try:
+        rows = conn.execute(
+            "SELECT key, value FROM settings "
+            "WHERE key LIKE 'visual_analysis:%'"
+        ).fetchall()
+    finally:
+        conn.close()
+
+    results = []
+    for row in rows:
+        try:
+            record = json.loads(row["value"])
+            if isinstance(record, dict):
+                results.append(record)
+        except (json.JSONDecodeError, TypeError):
+            continue
+
+    return sorted(
+        results,
+        key=lambda item: item.get("created_at", ""),
+        reverse=True,
+    )
+
+
+def delete_visual_analysis(visual_id: str) -> None:
+    """Delete one saved visual analysis."""
+    conn = get_connection()
+    try:
+        conn.execute(
+            "DELETE FROM settings WHERE key = ?",
+            (f"visual_analysis:{visual_id}",),
+        )
+        conn.commit()
+    finally:
+        conn.close()
